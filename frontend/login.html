@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NeuroChat — Secure Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0; padding: 0;
+      font-family: 'Inter', sans-serif;
+      background: #0f111a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .sky-bg {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    }
+    .moon {
+      position: absolute; top: 60px; right: 80px; width: 100px; height: 100px;
+      background: #fdfdfd; border-radius: 50%;
+      box-shadow: 0 0 60px 15px rgba(255, 255, 255, 0.2);
+    }
+    .stars {
+      position: absolute; inset: -100px;
+      background-image: radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+                        radial-gradient(2px 2px at 90px 40px, #fff, transparent);
+      background-size: 200px 200px;
+    }
+    .login-container {
+      position: relative; z-index: 10;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 40px;
+      width: 320px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      color: #fff;
+    }
+    h1 { margin-top: 0; font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+    p { margin-bottom: 24px; font-size: 14px; color: #9ea3b8; }
+    input {
+      width: 100%; box-sizing: border-box;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-size: 20px;
+      text-align: center;
+      letter-spacing: 6px;
+      margin-bottom: 20px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-color: #7c6bff; }
+    input::placeholder { color: rgba(255,255,255,0.2); letter-spacing: normal; }
+    button {
+      width: 100%;
+      background: #7c6bff;
+      color: #fff;
+      border: none;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    button:hover { background: #6a5acd; box-shadow: 0 0 15px rgba(124, 107, 255, 0.4); }
+    .error { color: #ff6b6b; font-size: 13px; margin-bottom: 15px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="sky-bg">
+    <div class="moon"></div>
+    <div class="stars"></div>
+  </div>
+  <div class="login-container">
+    <h1>NeuroChat</h1>
+    <p>Enter your authenticator code</p>
+    <div class="error" id="error-msg">Invalid or already used code.</div>
+    <form id="login-form">
+      <input type="text" id="totp-code" placeholder="000000" autocomplete="off" maxlength="6" autofocus>
+      <button type="submit">Unlock</button>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const code = document.getElementById('totp-code').value;
+      const errorMsg = document.getElementById('error-msg');
+      const btn = document.querySelector('button');
+      
+      btn.textContent = 'Verifying...';
+      try {
+        const res = await fetch('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        });
+        
+        if (res.ok) {
+          btn.textContent = 'Success!';
+          setTimeout(() => window.location.reload(), 500);
+        } else {
+          btn.textContent = 'Unlock';
+          errorMsg.style.display = 'block';
+          // Add simple shake animation
+          const container = document.querySelector('.login-container');
+          container.style.transform = 'translateX(-10px)';
+          setTimeout(() => container.style.transform = 'translateX(10px)', 100);
+          setTimeout(() => container.style.transform = 'translateX(-10px)', 200);
+          setTimeout(() => container.style.transform = 'translateX(0)', 300);
+        }
+      } catch (err) {
+        btn.textContent = 'Unlock';
+        errorMsg.textContent = 'Network error.';
+        errorMsg.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>
